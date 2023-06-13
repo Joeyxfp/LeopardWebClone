@@ -2,11 +2,20 @@ from tkinter import *
 import tkinter as tk
 
 import sqlite3 
-con = sqlite3.connect("assignment3.db")
+con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
-cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3@wit.edu',2024);")
-con.commit()
-con.close()
+#cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3@wit.edu',2024);")
+#cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm@wit.edu',2024);")
+#cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
+#cur.execute("UPDATE ADMIN\n"+
+#            "SET TITLE='Vice-President'\n"+
+#            "WHERE ID=3002\n")
+            
+            
+            
+            
+           
+
 class User(object):
     def __init__(self,f_name,l_name,ID):
         self.first = f_name
@@ -84,6 +93,14 @@ window = Tk()
 input1= tk.Entry(window)
 input2 = tk.Entry(window)
 
+def createNew():
+    mainWindow = Toplevel()
+    mainWindow.geometry("500x500")
+    tk.Label(mainWindow, text="Create New User").grid(row=0)
+    tk.Label(mainWindow, text="First Name").grid(row=1)
+    tk.Label(mainWindow, text="Last Name").grid(row=2)
+    tk.Label(mainWindow,text= "Major").grid(row = 3)
+
 
 def getLoginInfo():
     mainWindow = Toplevel()
@@ -116,6 +133,7 @@ def main():
     tk.Label(window, text="Password").grid(row=2)
 
     Loginbtn = Button(window,text="Log In",command = getLoginInfo)
+    createNewUser = Button(window,text ="Create New",command = createNew)
 
     
 
@@ -127,38 +145,56 @@ def main():
     input1.grid(row=1, column=1)
     input2.grid(row=2, column=1)
     Loginbtn.grid(row=3)
+    createNewUser.grid(row=3,column=1)
     window.mainloop()
 
     
-    user = User("KP","J",1)
-    user.setFirstName("Kale")
-    user.setLastName("Pel")
-    user.setID(2)
-    user.printInfo()
+    # user = User("KP","J",1)
+    # user.setFirstName("Kale")
+    # user.setLastName("Pel")
+    # user.setID(2)
+    # user.printInfo()
 
-    admin = Admin("Kaleb","P",1)
-    admin.addCourse("programming")
-    admin.removeCourse("programming")
-    admin.searchCourse("programming")
-    admin.printCourse("programming")
-    admin.addUser("Q")
-    admin.removeUser("Q")
-    admin.addStudent("student1")
-    admin.removeStudent("student1")
-    admin.createRoster("Roster1")
-    admin.searchRoster("Roster1")
-    admin.printRoster("Roster1")
+    # admin = Admin("Kaleb","P",1)
+    # admin.addCourse("programming")
+    # admin.removeCourse("programming")
+    # admin.searchCourse("programming")
+    # admin.printCourse("programming")
+    # admin.addUser("Q")
+    # admin.removeUser("Q")
+    # admin.addStudent("student1")
+    # admin.removeStudent("student1")
+    # admin.createRoster("Roster1")
+    # admin.searchRoster("Roster1")
+    # admin.printRoster("Roster1")
 
-    student = Student("Matt","A",100)
-    student.addCourse("APC")
-    student.dropCourse("APC")
-    student.searchCourse("APC")
-    student.printSchedule()
+    # student = Student("Matt","A",100)
+    # student.addCourse("APC")
+    # student.dropCourse("APC")
+    # student.searchCourse("APC")
+    # student.printSchedule()
 
-    instructor = Instructor("Mike","C",200)
-    instructor.printSchedule()
-    instructor.searchCourse("DCD")
-    instructor.printClassList()
+    # instructor = Instructor("Mike","C",200)
+    # instructor.printSchedule()
+    # instructor.searchCourse("DCD")
+    # instructor.printClassList()
+
+
+    cur.execute("SELECT TITLE\nFROM COURSE\nWHERE COURSE.TITLE ='Geology'")
+    geo = cur.fetchall()
+
+    cur.execute("SELECT DEPARTMENT\nFROM COURSE\nWHERE COURSE.SEMESTER ='Fall'")
+    dep = cur.fetchall()
+
+
+    cur.execute("SELECT * FROM COURSE")
+    course = cur.fetchall()
+
+    print(geo)
+    print(dep)
+    print(course)
+    con.commit()
+    con.close()
 
 
 if __name__ == "__main__":
