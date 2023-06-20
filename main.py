@@ -4,12 +4,12 @@ import tkinter as tk
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
-#cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3@wit.edu',2024);")
-#cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm@wit.edu',2024);")
-#cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
-#cur.execute("UPDATE ADMIN\n"+
-#            "SET TITLE='Vice-President'\n"+
-#            "WHERE ID=3002\n")
+cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3',2024);")
+cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm',2024);")
+cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
+cur.execute("UPDATE ADMIN\n"+
+            "SET TITLE='Vice-President'\n"+
+           "WHERE ID=3002\n")
             
             
             
@@ -190,9 +190,14 @@ def main():
     cur.execute("SELECT * FROM COURSE")
     course = cur.fetchall()
 
-    print(geo)
-    print(dep)
-    print(course)
+
+    cur.execute("SELECT COURSE.TITLE,INSTRUCTOR.LAST_NAME\nFROM COURSE,INSTRUCTOR\nWHERE COURSE.DEPARTMENT = INSTRUCTOR.DEPARTMENT")
+    teacherList = cur.fetchall()
+
+    print(teacherList)
+    #print(geo)
+    #print(dep)
+    #print(course)
     con.commit()
     con.close()
 
