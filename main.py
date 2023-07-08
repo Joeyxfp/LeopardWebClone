@@ -4,14 +4,17 @@ import tkinter as tk
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
-cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3',2024);")
-cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm',2024);")
-cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
-cur.execute("UPDATE ADMIN\n"+
-            "SET TITLE='Vice-President'\n"+
-           "WHERE ID=3002\n")
-            
-            
+
+#adding schedule table for students created by Joey
+sql_command = """
+CREATE TABLE SEMESTERSCHEDULE (  
+CRN CHAR(5) NOT NULL,
+INSTRUCTORID CHAR(5) NOT NULL,
+STUDENTID CHAR(5), 
+PRIMARY KEY (CRN, STUDENTID, INSTRUCTORID)
+);
+"""
+cur.execute(sql_command) 
             
             
            
@@ -32,7 +35,8 @@ class User(object):
         print("First Name: ",self.first)
         print("Last Name: ",self.last)
         print("ID: ",self.id)
-
+    def getID(self):
+        return self.ID
 
 class Admin(User):
     def __init__(self, f_name, l_name, ID):
@@ -60,6 +64,45 @@ class Admin(User):
         print("Searching " + course)
     def printCourse(self,course):
         print("Printing course" + course)
+    
+    def createCourse(self, cur):
+        #add course created by joey
+        while(1):
+            if input("Press 1 to add a course. Press 2 to exit") == '2' : 
+                return
+            crn = input('course CRN: ')
+            name = input("Course title: ")
+            department = input("Department: ")
+            time = input("Class time: ") 
+            days = input('Class days: ')
+            sem = input('Semester: ')
+            year = input('Year: ')
+            credits = input('Credits: ')
+            instructorId = input('Instructor Id: ')
+            try:
+                cur.execute("""INSERT INTO course VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');""" % (crn, name, department, time, days, year, credits, sem, instructorId)) 
+                con.commit()
+            except:
+                print("Invalid INPUT")
+    def removeCourse(self, cur):
+        #remove course created by joey
+        while(1):
+            if input("Press 1 to remove a course. Press 2 to exit") == '2' :
+                 return
+            crn = input("Input the course CRN: ")
+            try:
+                cur.execute("""SELECT * FROM course WHERE crn = '%s';""" %crn)
+                print("Course selected: %s" %cur.fetchall())
+                confirm = input("To delete type 'DELETE'")
+                match confirm:
+                    case 'DELETE':
+                        cur.execute("""DELETE FROM course WHERE crn = '%s';""" %crn)
+                        con.commit()
+                    case _:
+                        pass
+            except:
+                print("INVALID INPUT")
+
 
 class Student(User):
     def __init__(self, f_name, l_name, ID):
@@ -73,6 +116,37 @@ class Student(User):
         print(course+" dropped")
     def printSchedule(self):
         print("Printing Schedule")
+    
+    def addCourseToSemesterSchedule(self, cur):
+        #add course to semester schedule created by Joey
+        if input("Press 1 to add a course to Schedule, Press 2 to exit") == '2' : 
+            return #currently asks for input but we can change to buttons with tkinter menu
+        crn = input('Course CRN: ')
+        cur.execute("SELECT * FROM COURSE WHERE CRN = '%s';" % (crn))
+        course = cur.fetchone()
+        if course == None:
+            print("Invalid CRN") 
+        else:
+            try: #attempt to add course 
+                cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[8], self.getID()))
+                con.commit()
+            except: #if course already exists it tells the user 
+                print('Course already in schedule')
+    def dropCourseFromSemesterSchedule(self, cur):
+        #remove course from schedule created by joey
+        if input("Press 1 to drop a course, Press 2 to exit") == '2' : 
+            return
+        crn = input('Course CRN: ')
+        cur.execute("SELECT * FROM COURSE WHERE CRN = '%s';" % (crn))
+        course = cur.fetchone()
+        if course == None:
+            print("Invalid CRN") 
+        else:
+            try:
+                cur.execute("""DELETE FROM SEMESTERSCHEDULE WHERE CRN='%s';""" % (crn))
+                con.commit()
+            except:
+                print('Course not in schedule')
 
 class Instructor(User):
     def __init__(self, f_name, l_name, ID):
@@ -84,7 +158,33 @@ class Instructor(User):
         print("Printing Schedule")
     def printClassList(self):
         print("Printing Class list")
+    def instructorPrintSchedule(self, cursor):
+        #prints instructors schedule created by joey
+        cur.execute("""SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';""" % self.getID())
+        allClasses = cursor.fetchall()
+        if(allClasses == None):
+            print("No classes found.")
+        else:
+            for course in allClasses:
+                printCourse(course)
 
+    def searchRosters(self, cur):
+      #prints roster for instructor created by joey
+      while(1):
+          if input("Press 1 to Search courses. Pess 2 to exit ") == '2' : 
+            return
+          crn = input('Please enter a course CRN: ')
+          try:
+              cur.execute("SELECT STUDENTID FROM SEMESTERSCHEDULE WHERE CRN='%s';" %crn)
+              students = cur.fetchall()
+              for person in students:
+                  cur.execute("SELECT SURNAME, NAME FROM STUDENT WHERE ID='%s';" %person)
+                  student = cur.fetchall()
+                  for i in student:
+                      print(i)
+          except:
+              print("Invalid Input")
+    
 window = Tk()
 
 #mainWindow = Toplevel()
@@ -118,7 +218,16 @@ def getLoginInfo():
     mainWindow.deiconify() #Shows window
     #mainWindow.mainloop()
     
-
+def printCourse(course): 
+    print('Course Name: ' + course[1])
+    print('CRN: ' + course[0])
+    print('Department: ' + course[2])
+    print('Time: ' + course[3])
+    print('Days of the Week: ' + course[4])
+    print('Semester: ' + course[5])
+    print('Year: ' + str(course[6]))
+    print('Credits: ' + str(course[7]))
+    print(' ')
 
     #tk.Label(window, text=userN).grid(row=4)
     
