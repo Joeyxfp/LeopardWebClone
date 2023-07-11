@@ -1,21 +1,21 @@
 from tkinter import *
 import tkinter as tk
+import datetime
 
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
 
-#adding schedule table for students created by Joey
-sql_command = """
-CREATE TABLE SEMESTERSCHEDULE (  
-CRN CHAR(5) NOT NULL,
-INSTRUCTORID CHAR(5) NOT NULL,
-STUDENTID CHAR(5), 
-PRIMARY KEY (CRN, STUDENTID, INSTRUCTORID)
-);
-"""
-cur.execute(sql_command) 
-            
+today = datetime.date.today()
+year = today.year #gets current year for grad year
+
+#cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3',2024);")
+#cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm',2024);")
+#cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
+# cur.execute("UPDATE ADMIN\n"+
+#             "SET TITLE='Vice-President'\n"+
+#            "WHERE ID=3002\n")
+#cur.execute("INSERT INTO LOGIN (EMAIL, PASSWORD, ID) SELECT EMAIL, NULL, ID FROM INSTRUCTOR;")
             
            
 
@@ -35,36 +35,14 @@ class User(object):
         print("First Name: ",self.first)
         print("Last Name: ",self.last)
         print("ID: ",self.id)
-    def getID(self):
-        return self.ID
+    def searchCourse(self,course):
+        print("Searching " + course)
+
 
 class Admin(User):
     def __init__(self, f_name, l_name, ID):
         User.__init__(self,f_name,l_name,ID)
 
-    def addCourse(self,course):
-        print(course+" added")
-    def removeCourse(self,course):
-        print(course+" removed")
-    def addUser(self,user):
-        print(user+" added to system")
-    def removeUser(self,user):
-        print(user+" removed from system")
-    def addStudent(self, user):
-        print(user + " added to system")
-    def removeStudent(self, user):
-        print(user+" removed from system")
-    def createRoster(self, roster):
-        print("Creating roster named " + roster)
-    def searchRoster(self, roster):
-        print("Searching "+roster)
-    def printRoster(self,roster):
-        print("Printing roster"+ roster)
-    def searchCourse(self,course):
-        print("Searching " + course)
-    def printCourse(self,course):
-        print("Printing course" + course)
-    
     def createCourse(self, cur):
         #add course created by joey
         while(1):
@@ -102,21 +80,47 @@ class Admin(User):
                         pass
             except:
                 print("INVALID INPUT")
-
+    def addUser(self,user):
+        print(user+" added to system")
+    def removeUser(self,user):
+        print(user+" removed from system")
+    def addStudent(self, user):
+        print(user + " added to system")
+    def removeStudent(self, user):
+        print(user+" removed from system")
+    def createRoster(self, roster):
+        print("Creating roster named " + roster)
+    def searchRoster(self, roster):
+        print("Searching "+roster)
+    def printRoster(self,roster):
+        print("Printing roster"+ roster)
+    # def searchCourse(self,course):
+    #     print("Searching " + course)
+    def printCourse(self,course):
+        print("Printing course" + course)
 
 class Student(User):
-    def __init__(self, f_name, l_name, ID):
+    def __init__(self, ID, f_name, l_name, major, email, exp_grad,password):
         User.__init__(self,f_name, l_name, ID)
+        self.id = ID
+        self.first = f_name
+        self.last = l_name
+        self.major = major
+        self.email = email
+        self.exp_grad_year = exp_grad
+        self.password = password
+
+    def addToDataBase(self):
+        cur.execute("INSERT INTO STUDENT VALUES("+str(self.id)+",'"+self.first+"','"+self.last+"','"+self.major+"',"
+                    +"'"+self.email+"',"+str(self.exp_grad_year)+");")
+        cur.execute("INSERT INTO LOGIN VALUES('"+self.email+"','"+self.password+"',"+self.id+");")
 
     def searchCourse(self,course):
         print("Searching " + course)
-    def addCourse(self,course):
-        print(course+" added")
-    def dropCourse(self,course):
-        print(course+" dropped")
+
     def printSchedule(self):
         print("Printing Schedule")
-    
+        
     def addCourseToSemesterSchedule(self, cur):
         #add course to semester schedule created by Joey
         if input("Press 1 to add a course to Schedule, Press 2 to exit") == '2' : 
@@ -158,78 +162,96 @@ class Instructor(User):
         print("Printing Schedule")
     def printClassList(self):
         print("Printing Class list")
-    def instructorPrintSchedule(self, cursor):
-        #prints instructors schedule created by joey
-        cur.execute("""SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';""" % self.getID())
-        allClasses = cursor.fetchall()
-        if(allClasses == None):
-            print("No classes found.")
-        else:
-            for course in allClasses:
-                printCourse(course)
 
-    def searchRosters(self, cur):
-      #prints roster for instructor created by joey
-      while(1):
-          if input("Press 1 to Search courses. Pess 2 to exit ") == '2' : 
-            return
-          crn = input('Please enter a course CRN: ')
-          try:
-              cur.execute("SELECT STUDENTID FROM SEMESTERSCHEDULE WHERE CRN='%s';" %crn)
-              students = cur.fetchall()
-              for person in students:
-                  cur.execute("SELECT SURNAME, NAME FROM STUDENT WHERE ID='%s';" %person)
-                  student = cur.fetchall()
-                  for i in student:
-                      print(i)
-          except:
-              print("Invalid Input")
-    
 window = Tk()
 
 #mainWindow = Toplevel()
 #mainWindow.withdraw() #Hides window
 
-input1= tk.Entry(window)
-input2 = tk.Entry(window)
+mainEmailInput= tk.Entry(window)#username/email input1
+mainPasswordInput = tk.Entry(window) #password
+
+
+def create(fName,lName,major,password):
+    email = lName + fName[0]
+    email = email.lower()
+
+    statement = f"SELECT ID from STUDENT WHERE FIRST_NAME='{fName}';"
+    test = cur.execute(statement)
+    print(test)
+    if not cur.fetchone:
+        print("USER EXISTS")
+    else:
+        cur.execute("SELECT ID FROM STUDENT")
+        idList = cur.fetchall()
+        currID = idList[-1][0]
+        newID = currID + 1
+        gradyear = year + 4
+        s = Student(newID,fName,lName,major,email,gradyear,password)
+        s.addToDataBase()
+
+
+
+
 
 def createNew():
-    mainWindow = Toplevel()
+    mainWindow = Toplevel(window)
     mainWindow.geometry("500x500")
     tk.Label(mainWindow, text="Create New User").grid(row=0)
     tk.Label(mainWindow, text="First Name").grid(row=1)
     tk.Label(mainWindow, text="Last Name").grid(row=2)
-    tk.Label(mainWindow,text= "Major").grid(row = 3)
+    tk.Label(mainWindow, text="Password").grid(row=3)
+    tk.Label(mainWindow,text= "Major").grid(row = 4)
+
+    inFirstName = tk.Entry(mainWindow)
+    inLastName = tk.Entry(mainWindow)
+    inPassword = tk.Entry(mainWindow)
+    inMajor = tk.Entry(mainWindow)
+
+    inFirstName.grid(row=1, column=1)
+    inLastName.grid(row=2, column=1)
+    inPassword.grid(row=3,column=1)
+    inMajor.grid(row=4, column=1)
+
+    b3 = tk.Button(mainWindow, text=' Create ',
+                   command= lambda:[create(inFirstName.get(),inLastName.get(),inMajor.get(),inPassword.get()),mainWindow.destroy()])
+    b3.grid(row=5,column=1)
 
 
 def getLoginInfo():
     mainWindow = Toplevel()
     mainWindow.geometry("800x800")
 
-    #loop through the data tables to check if they exist 
-    userN = input1.get()
-    if(userN == "1"):
-        mainWindow.title("Student")
-    if(userN == "2"):
-        mainWindow.title("Admin")
-    if(userN == "3"):
-        mainWindow.title("Teacher")
-    userN = ""
-    mainWindow.deiconify() #Shows window
-    #mainWindow.mainloop()
-    
-def printCourse(course): 
-    print('Course Name: ' + course[1])
-    print('CRN: ' + course[0])
-    print('Department: ' + course[2])
-    print('Time: ' + course[3])
-    print('Days of the Week: ' + course[4])
-    print('Semester: ' + course[5])
-    print('Year: ' + str(course[6]))
-    print('Credits: ' + str(course[7]))
-    print(' ')
+    #loop through the data tables to check if they exist
 
-    #tk.Label(window, text=userN).grid(row=4)
+    cur.execute(f"SELECT LOGIN.ID\nFROM LOGIN\nWHERE LOGIN.PASSWORD = '{mainPasswordInput.get()}'") 
+    loginID = cur.fetchall()
+
+    userN = mainEmailInput.get()
+    cur.execute(f"SELECT LOGIN.ID\nFROM LOGIN\nWHERE LOGIN.EMAIL = '{userN}'")
+    userID = cur.fetchall()
+
+    #CHECKS ID WITH EMAIL AND PASSWORD TO CHECK FOR MATCH
+    if(loginID != userID):
+        print("Log in Failed")
+    else:
+        userID = str(userID[0][0]) #gets first number of ID as string 
+        status = userID[0] # this will give 1,2,3 based on status of user 
+
+        if(status == '1'):
+            mainWindow.title("Student")
+
+        if(userN == "1"):
+            mainWindow.title("Student")
+        if(userN == "2"):
+            mainWindow.title("Admin")
+        if(userN == "3"):
+            mainWindow.title("Teacher")
+        userN = ""
+        mainWindow.deiconify() #Shows window
+
+        #mainWindow.mainloop()
+        #tk.Label(window, text=userN).grid(row=4)
     
 
 
@@ -251,8 +273,8 @@ def main():
     # if(username != "" ):
     #     mainWindow = Tk()
 
-    input1.grid(row=1, column=1)
-    input2.grid(row=2, column=1)
+    mainEmailInput.grid(row=1, column=1)
+    mainPasswordInput.grid(row=2, column=1)
     Loginbtn.grid(row=3)
     createNewUser.grid(row=3,column=1)
     window.mainloop()
