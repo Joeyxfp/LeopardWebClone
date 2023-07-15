@@ -1,6 +1,8 @@
 from tkinter import *
 import tkinter as tk
 import datetime
+import unittest 
+
 
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
@@ -9,15 +11,26 @@ cur = con.cursor()
 today = datetime.date.today()
 year = today.year #gets current year for grad year
 
-#cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3',2024);")
-#cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm',2024);")
-#cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
-# cur.execute("UPDATE ADMIN\n"+
-#             "SET TITLE='Vice-President'\n"+
-#            "WHERE ID=3002\n")
-#cur.execute("INSERT INTO LOGIN (EMAIL, PASSWORD, ID) SELECT EMAIL, NULL, ID FROM INSTRUCTOR;")
-            
-           
+
+     
+loginStatus = False    
+Testing = False
+
+#Written by Kaleb
+class TestCases(unittest.TestCase):
+    def test_log_in(self):
+        Testing = True # if true automatically press the log in button 
+        mainEmailInput.insert(0,"newtoni") #valid username
+        mainPasswordInput.insert(0,"a")# valid password
+        main(Testing)
+        self.assertEqual(loginStatus,True,"Log In Failed")
+    
+    def test_addCourse_semesterSchedule(self):
+        s = Student(1001,"Issac","Newton","BSAS","newtoni",1668,"a")
+        s.addCourseToSemesterSchedule(cur)
+
+
+    
 
 class User(object):
     def __init__(self,f_name,l_name,ID):
@@ -112,14 +125,7 @@ class Student(User):
         self.email = email
         self.exp_grad_year = exp_grad
         self.password = password
-    def __init__(self, ID, f_name, l_name, major, email, exp_grad):
-        User.__init__(self,f_name, l_name, ID)
-        self.id = ID
-        self.first = f_name
-        self.last = l_name
-        self.major = major
-        self.email = email
-        self.exp_grad_year = exp_grad
+    
 
     def addToDataBase(self):
         cur.execute("INSERT INTO STUDENT VALUES("+str(self.id)+",'"+self.first+"','"+self.last+"','"+self.major+"',"
@@ -162,6 +168,11 @@ class Student(User):
                 con.commit()
             except:
                 print('Course not in schedule')
+    def log_in(self):
+        mainEmailInput.insert(0,self.email)
+        mainPasswordInput.insert(0,self.password)
+        Loginbtn.invoke()
+        
 
 class Instructor(User):
     def __init__(self, ID,f_name, l_name,title,email,department,yearOfHire ):
@@ -184,10 +195,14 @@ window = Tk()
 #mainWindow.withdraw() #Hides window
 
 mainEmailInput= tk.Entry(window)#username/email input1
+
 mainPasswordInput = tk.Entry(window) #password
 
 
+
+
 def create(fName,lName,major,password):
+    #Written by Kaleb 
     email = lName + fName[0]
     email = email.lower()
 
@@ -210,6 +225,7 @@ def create(fName,lName,major,password):
 
 
 def createNew():
+    #Written by Kaleb 
     mainWindow = Toplevel(window)
     mainWindow.geometry("500x500")
     tk.Label(mainWindow, text="Create New User").grid(row=0)
@@ -233,8 +249,10 @@ def createNew():
 
 
 def getLoginInfo():
+    #Written by Kaleb
     mainWindow = Toplevel(window)
     mainWindow.geometry("400x400")
+
 
     #loop through the data tables to check if they exist
 
@@ -249,6 +267,8 @@ def getLoginInfo():
     if(loginID != userID):
         print("Log in Failed")
     else:
+        global loginStatus
+        loginStatus = True
         userID = str(userID[0][0]) #gets first number of ID as string 
         status = userID[0] # this will give 1,2,3 based on status of user 
         
@@ -257,7 +277,7 @@ def getLoginInfo():
             mainWindow.title("Student")
             cur.execute(f"SELECT *\nFROM STUDENT\nWHERE ID={userID} ")
             student = cur.fetchall()
-            s = Student(student[0][0],student[0][1],student[0][2],student[0][3],student[0][4],student[0][5])
+            s = Student(student[0][0],student[0][1],student[0][2],student[0][3],student[0][4],student[0][5],mainPasswordInput.get())
             course_entry_search = tk.Entry(mainWindow)
             course_entry_search.grid(row=0,column=1)
             
@@ -341,9 +361,11 @@ def getLoginInfo():
         mainWindow.deiconify() #Shows window
 
     
+Loginbtn = Button(window,text="Log In",command = getLoginInfo)
 
 
-def main():
+def main(Testing):
+    #Written by Kaleb
     window.title("Lepord Web")
     window.geometry("500x500")
 
@@ -351,10 +373,11 @@ def main():
     tk.Label(window, text="Username").grid(row=1)
     tk.Label(window, text="Password").grid(row=2)
 
-    Loginbtn = Button(window,text="Log In",command = getLoginInfo)
+    #Loginbtn = Button(window,text="Log In",command = lambda:[getLoginInfo])
+    if(Testing):
+        Loginbtn.invoke()
+        window.after(2000,lambda:window.destroy())
     createNewUser = Button(window,text ="Create New",command = createNew)
-
-
     mainEmailInput.grid(row=1, column=1)
     mainPasswordInput.grid(row=2, column=1)
     Loginbtn.grid(row=3)
@@ -369,4 +392,5 @@ def main():
 
 if __name__ == "__main__":
     
-    main()
+    #main(Testing)
+    unittest.main()
