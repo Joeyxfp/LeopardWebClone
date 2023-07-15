@@ -6,16 +6,8 @@ con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
 
 #adding schedule table for students created by Joey
-sql_command = """
-CREATE TABLE SEMESTERSCHEDULE (  
-CRN CHAR(5) NOT NULL,
-INSTRUCTORID CHAR(5) NOT NULL,
-STUDENTID CHAR(5), 
-PRIMARY KEY (CRN, STUDENTID, INSTRUCTORID)
-);
-"""
-cur.execute(sql_command) 
-            
+
+loginwindow = True       
             
            
 
@@ -184,7 +176,15 @@ class Instructor(User):
                       print(i)
           except:
               print("Invalid Input")
-    
+
+def searchAll(cursor):
+    #print all courses created by joey
+    cursor.execute("SELECT * FROM course;")
+    courses = cursor.fetchall()
+    for course in courses:
+        printCourse(course)   
+
+
 window = Tk()
 
 #mainWindow = Toplevel()
@@ -231,18 +231,80 @@ def printCourse(course):
 
     #tk.Label(window, text=userN).grid(row=4)
     
-
+def searchParam(cursor):
+    #allows search by parameter craeted by joey
+    print('Params: 1-CRN, 2-TITLE, 3-DEPARTMENT, 4-TIME, 5-DAYS, 6-SEMESTER, 7-YEAR, 8-CREDITS, 9-INSTRUCTORID')      #There is no case statement for 'Time'
+    param = input("Enter a parameter: ")
+    match param:
+        case '1':
+            crn = input("Enter a CRN: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CRN='%s';" %crn)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '2':
+            time = input("Enter the start time of the course in the format 10:00:00 : ")
+            cursor.execute("SELECT * FROM COURSE WHERE TIME='%s';" %time)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '3':
+            title = input("Enter a title: ")
+            cursor.execute("SELECT * FROM COURSE WHERE TITLE='%s';" %title)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '4':
+            department = input("Enter a department: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DEPARTMENT='%s';" %department)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '5':
+            daysOfWeek = input("Enter a days of week: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DAYSOFWEEK='%s';" %daysOfWeek)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '6':
+            semester = input("Enter a semester: ")
+            cursor.execute("SELECT * FROM COURSE WHERE SEMESTER='%s';" %semester)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '7':
+            year = input("Enter a year: ")
+            cursor.execute("SELECT * FROM COURSE WHERE YEAR='%s';" %year)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '8':
+            credits = input("Enter a credits: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CREDITS='%s';" %credits)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '9':
+            instructorID = input("Enter an instructor ID: ")
+            cursor.execute("SELECT * FROM COURSE WHERE INSTRUCTORID='%s';" %instructorID)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case _:
+            print('Not a valid param')
+        
 
 def main():
-    window.title("Lepord Web")
-    window.geometry("500x500")
+    while loginwindow: 
+        window.title("Lepord Web")
+        window.geometry("500x500")
 
-    tk.Label(window, text="Lepord Web").grid(row=0)
-    tk.Label(window, text="Username").grid(row=1)
-    tk.Label(window, text="Password").grid(row=2)
+        tk.Label(window, text="Lepord Web").grid(row=0)
+        tk.Label(window, text="Username").grid(row=1)
+        tk.Label(window, text="Password").grid(row=2)
 
-    Loginbtn = Button(window,text="Log In",command = getLoginInfo)
-    createNewUser = Button(window,text ="Create New",command = createNew)
+        Loginbtn = Button(window,text="Log In",command = getLoginInfo)
+        createNewUser = Button(window,text ="Create New",command = createNew)
 
     
 
@@ -255,6 +317,7 @@ def main():
     input2.grid(row=2, column=1)
     Loginbtn.grid(row=3)
     createNewUser.grid(row=3,column=1)
+    
     window.mainloop()
 
     
