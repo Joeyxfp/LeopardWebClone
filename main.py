@@ -2,6 +2,8 @@ from tkinter import *
 import tkinter as tk
 import datetime
 import unittest 
+from unittest import mock
+from unittest.mock import patch
 
 
 import sqlite3 
@@ -18,17 +20,45 @@ Testing = False
 
 #Written by Kaleb
 class TestCases(unittest.TestCase):
+    
     def test_log_in(self):
         Testing = True # if true automatically press the log in button 
         mainEmailInput.insert(0,"newtoni") #valid username
         mainPasswordInput.insert(0,"a")# valid password
         main(Testing)
         self.assertEqual(loginStatus,True,"Log In Failed")
-    
-    def test_addCourse_semesterSchedule(self):
-        s = Student(1001,"Issac","Newton","BSAS","newtoni",1668,"a")
-        s.addCourseToSemesterSchedule(cur)
 
+    def test_searchAllCoursesParam(self):
+        with mock.patch('builtins.input',side_effect=['1',11051]):
+            searchParam(cur)
+
+    def test_searchall(self):
+        searchAll(cur)
+    
+    def test_addCourse(self):
+        with mock.patch('builtins.input',side_effect=['1',"12010","Object Oriented Programming","BSCE","3:00","2","2023","4","Spring","2002","2"]):
+            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
+            print('-------Course created-----\n')
+            a.createCourse(cur)
+    def test_removeCourse(self):
+        with mock.patch('builtins.input',side_effect=['1',"12010","DELETE","2"]):
+            print('-------Course Removed-----\n')
+            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
+            a.removeCourse(cur)
+    def test_addCourseSemSchedule(self):
+        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
+            print('-------Course Added to schedule-----\n')
+            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
+            s.addCourseToSemesterSchedule(cur)
+    def test_removeCourseSemSchedule(self):
+        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
+            print('-------Course Dropped-----\n')
+            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
+            s.dropCourseFromSemesterSchedule(cur)
+    def test_printCourseRoster(self):
+       print("----SCHEDULE-------\n")
+       i = Instructor("2002","Nelson","Patrick","Full Prof.","parickn","HUSS","1994")
+       i.instructorPrintSchedule(cur)
 
     
 
@@ -69,15 +99,12 @@ class Admin(User):
             department = input("Department: ")
             time = input("Class time: ") 
             days = input('Class days: ')
-            sem = input('Semester: ')
             year = input('Year: ')
             credits = input('Credits: ')
+            sem = input('Semester: ')
             instructorId = input('Instructor Id: ')
-            try:
-                cur.execute("""INSERT INTO course VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');""" % (crn, name, department, time, days, year, credits, sem, instructorId)) 
-                con.commit()
-            except:
-                print("Invalid INPUT")
+            cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crn, name, department, time, days, year, credits, sem,instructorId)) 
+            con.commit()
     def removeCourse(self, cur):
         #remove course created by joey
         while(1):
@@ -85,12 +112,12 @@ class Admin(User):
                  return
             crn = input("Input the course CRN: ")
             try:
-                cur.execute("""SELECT * FROM course WHERE crn = '%s';""" %crn)
+                cur.execute("""SELECT * FROM course WHERE CRN = '%s';""" %crn)
                 print("Course selected: %s" %cur.fetchall())
                 confirm = input("To delete type 'DELETE'")
                 match confirm:
                     case 'DELETE':
-                        cur.execute("""DELETE FROM course WHERE crn = '%s';""" %crn)
+                        cur.execute("""DELETE FROM COURSE WHERE CRN = '%s';""" %crn)
                         con.commit()
                     case _:
                         pass
@@ -126,7 +153,8 @@ class Student(User):
         self.exp_grad_year = exp_grad
         self.password = password
     
-
+    def getID(self):
+        return self.id
     def addToDataBase(self):
         cur.execute("INSERT INTO STUDENT VALUES("+str(self.id)+",'"+self.first+"','"+self.last+"','"+self.major+"',"
                     +"'"+self.email+"',"+str(self.exp_grad_year)+");")
@@ -147,9 +175,9 @@ class Student(User):
         course = cur.fetchone()
         if course == None:
             print("Invalid CRN") 
-        else:
-            try: #attempt to add course 
-                cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[8], self.getID()))
+        else: 
+            try:
+                cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[1], self.getID()))
                 con.commit()
             except: #if course already exists it tells the user 
                 print('Course already in schedule')
@@ -182,14 +210,126 @@ class Instructor(User):
         self.department = department
         self.yearOfHire = yearOfHire
 
+    def getID(self):
+        return self.id
+
     def searchCourse(self,course):
         print("Searching " + course)
     def printSchedule(self):
         print("Printing Schedule")
     def printClassList(self):
         print("Printing Class list")
+    def instructorPrintSchedule(self, cur):
+        #prints instructors schedule created by joey
+        cur.execute("""SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';""" % self.getID())
+        allClasses = cur.fetchall()
+        if(allClasses == None):
+            print("No classes found.")
+        else:
+            for course in allClasses:
+                printCourse(course)
+
+    def searchRosters(self, cur):
+      #prints roster for instructor created by joey
+      while(1):
+          if input("Press 1 to Search courses. Pess 2 to exit ") == '2' : 
+            return
+          crn = input('Please enter a course CRN: ')
+          try:
+              cur.execute("SELECT STUDENTID FROM SEMESTERSCHEDULE WHERE CRN='%s';" %crn)
+              students = cur.fetchall()
+              for person in students:
+                  cur.execute("SELECT SURNAME, NAME FROM STUDENT WHERE ID='%s';" %person)
+                  student = cur.fetchall()
+                  for i in student:
+                      print(i)
+          except:
+              print("Invalid Input")
+
+def searchAll(cursor):
+    #print all courses created by joey
+    cursor.execute("SELECT * FROM course;")
+    courses = cursor.fetchall()
+    for course in courses:
+        printCourse(course) 
 
 window = Tk()
+
+def printCourse(course):
+    print('Course Name: ' + str(course[1]))
+    print('CRN: ' + str(course[0]))
+    print('Department: ' + str(course[2]))
+    print('Time: ' + str(course[3]))
+    print('Days of the Week: ' + str(course[4]))
+    print('Semester: ' + str(course[5]))
+    print('Year: ' + str(course[6]))
+    print('Credits: ' + str(course[7]))
+    print(' ')
+
+def searchParam(cursor):
+    #allows search by parameter craeted by joey
+    print('Params: 1-CRN, 2-TITLE, 3-DEPARTMENT, 4-TIME, 5-DAYS, 6-SEMESTER, 7-YEAR, 8-CREDITS, 9-INSTRUCTORID')      #There is no case statement for 'Time'
+    param = input("Enter a parameter: ")
+    match param:
+        case '1':
+            crn = input("Enter a CRN: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CRN='%s';" %crn)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '2':
+            time = input("Enter the start time of the course in the format 10:00:00 : ")
+            cursor.execute("SELECT * FROM COURSE WHERE TIME='%s';" %time)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '3':
+            title = input("Enter a title: ")
+            cursor.execute("SELECT * FROM COURSE WHERE TITLE='%s';" %title)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '4':
+            department = input("Enter a department: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DEPARTMENT='%s';" %department)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '5':
+            daysOfWeek = input("Enter a days of week: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DAYSOFWEEK='%s';" %daysOfWeek)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '6':
+            semester = input("Enter a semester: ")
+            cursor.execute("SELECT * FROM COURSE WHERE SEMESTER='%s';" %semester)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '7':
+            year = input("Enter a year: ")
+            cursor.execute("SELECT * FROM COURSE WHERE YEAR='%s';" %year)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '8':
+            credits = input("Enter a credits: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CREDITS='%s';" %credits)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '9':
+            instructorID = input("Enter an instructor ID: ")
+            cursor.execute("SELECT * FROM COURSE WHERE INSTRUCTORID='%s';" %instructorID)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case _:
+            print(f'"{param}"Not a valid param')
+
+
+
 
 #mainWindow = Toplevel()
 #mainWindow.withdraw() #Hides window
@@ -386,11 +526,13 @@ def main(Testing):
 
 
    
-    con.commit()
-    con.close()
+    # con.commit()
+    # con.close()
 
 
 if __name__ == "__main__":
     
     #main(Testing)
     unittest.main()
+    con.commit()
+    con.close()
