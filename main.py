@@ -160,8 +160,12 @@ class Student(User):
                     +"'"+self.email+"',"+str(self.exp_grad_year)+");")
         cur.execute("INSERT INTO LOGIN VALUES('"+self.email+"','"+self.password+"',"+str(self.id)+");")
 
-    def searchCourse(self,course):
-        print("Searching " + course)
+    def searchCourse(self,course_CRN):
+        cur.execute("SELECT * FROM COURSE WHERE CRN='%s';" %course_CRN)
+        courses = cur.fetchall()
+        tb = tk.Text()
+        for course in courses:
+            printCoursetoGUI(course)
 
     def printSchedule(self):
         print("Printing Schedule")
@@ -265,6 +269,16 @@ def printCourse(course):
     print('Year: ' + str(course[6]))
     print('Credits: ' + str(course[7]))
     print(' ')
+
+def printCoursetoGUI(course,text_box):
+    text_box.Insert('Course Name: ' + str(course[1]))
+    text_box.Insert('CRN: ' + str(course[0]))
+    text_box.Insert('Department: ' + str(course[2]))
+    text_box.Insert('Time: ' + str(course[3]))
+    text_box.Insert('Days of the Week: ' + str(course[4]))
+    text_box.Insert('Semester: ' + str(course[5]))
+    text_box.Insert('Year: ' + str(course[6]))
+    text_box.Insert('Credits: ' + str(course[7]))
 
 def searchParam(cursor):
     #allows search by parameter craeted by joey
@@ -532,7 +546,7 @@ def main(Testing):
 
 if __name__ == "__main__":
     
-    #main(Testing)
-    unittest.main()
+    main(Testing)
+    #unittest.main()
     con.commit()
     con.close()
