@@ -1,6 +1,10 @@
 from tkinter import *
 import tkinter as tk
 import datetime
+import unittest 
+from unittest import mock
+from unittest.mock import patch
+
 
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
@@ -9,15 +13,54 @@ cur = con.cursor()
 today = datetime.date.today()
 year = today.year #gets current year for grad year
 
-#cur.execute("INSERT INTO STUDENT VALUES(101,'Kaleb','Pelletier','COMP_ENG','pelletierk3',2024);")
-#cur.execute("INSERT INTO STUDENT VALUES(102,'Matt','Auger','COMP_ENG','augerm',2024);")
-#cur.execute("DELETE FROM INSTRUCTOR WHERE LAST_NAME='Fourier';")
-# cur.execute("UPDATE ADMIN\n"+
-#             "SET TITLE='Vice-President'\n"+
-#            "WHERE ID=3002\n")
-#cur.execute("INSERT INTO LOGIN (EMAIL, PASSWORD, ID) SELECT EMAIL, NULL, ID FROM INSTRUCTOR;")
-            
-           
+
+     
+loginStatus = False    
+Testing = False
+
+#Written by Kaleb
+class TestCases(unittest.TestCase):
+    
+    def test_log_in(self):
+        Testing = True # if true automatically press the log in button 
+        mainEmailInput.insert(0,"newtoni") #valid username
+        mainPasswordInput.insert(0,"a")# valid password
+        main(Testing)
+        self.assertEqual(loginStatus,True,"Log In Failed")
+
+    def test_searchAllCoursesParam(self):
+        with mock.patch('builtins.input',side_effect=['1',11051]):
+            searchParam(cur)
+
+    def test_searchall(self):
+        searchAll(cur)
+    
+    def test_addCourse(self):
+        with mock.patch('builtins.input',side_effect=['1',"12010","Object Oriented Programming","BSCE","3:00","2","2023","4","Spring","2002","2"]):
+            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
+            print('-------Course created-----\n')
+            a.createCourse(cur)
+    def test_removeCourse(self):
+        with mock.patch('builtins.input',side_effect=['1',"12010","DELETE","2"]):
+            print('-------Course Removed-----\n')
+            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
+            a.removeCourse(cur)
+    def test_addCourseSemSchedule(self):
+        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
+            print('-------Course Added to schedule-----\n')
+            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
+            s.addCourseToSemesterSchedule(cur)
+    def test_removeCourseSemSchedule(self):
+        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
+            print('-------Course Dropped-----\n')
+            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
+            s.dropCourseFromSemesterSchedule(cur)
+    def test_printCourseRoster(self):
+       print("----SCHEDULE-------\n")
+       i = Instructor("2002","Nelson","Patrick","Full Prof.","parickn","HUSS","1994")
+       i.instructorPrintSchedule(cur)
+
+    
 
 class User(object):
     def __init__(self,f_name,l_name,ID):
@@ -40,8 +83,11 @@ class User(object):
 
 
 class Admin(User):
-    def __init__(self, f_name, l_name, ID):
+    def __init__(self,ID, f_name, l_name, title,email,office):
         User.__init__(self,f_name,l_name,ID)
+        self.title = title
+        self.email = email
+        self.office = office
 
     def createCourse(self, cur):
         #add course created by joey
@@ -53,15 +99,12 @@ class Admin(User):
             department = input("Department: ")
             time = input("Class time: ") 
             days = input('Class days: ')
-            sem = input('Semester: ')
             year = input('Year: ')
             credits = input('Credits: ')
+            sem = input('Semester: ')
             instructorId = input('Instructor Id: ')
-            try:
-                cur.execute("""INSERT INTO course VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');""" % (crn, name, department, time, days, year, credits, sem, instructorId)) 
-                con.commit()
-            except:
-                print("Invalid INPUT")
+            cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crn, name, department, time, days, year, credits, sem,instructorId)) 
+            con.commit()
     def removeCourse(self, cur):
         #remove course created by joey
         while(1):
@@ -69,12 +112,12 @@ class Admin(User):
                  return
             crn = input("Input the course CRN: ")
             try:
-                cur.execute("""SELECT * FROM course WHERE crn = '%s';""" %crn)
+                cur.execute("""SELECT * FROM course WHERE CRN = '%s';""" %crn)
                 print("Course selected: %s" %cur.fetchall())
                 confirm = input("To delete type 'DELETE'")
                 match confirm:
                     case 'DELETE':
-                        cur.execute("""DELETE FROM course WHERE crn = '%s';""" %crn)
+                        cur.execute("""DELETE FROM COURSE WHERE CRN = '%s';""" %crn)
                         con.commit()
                     case _:
                         pass
@@ -109,11 +152,13 @@ class Student(User):
         self.email = email
         self.exp_grad_year = exp_grad
         self.password = password
-
+    
+    def getID(self):
+        return self.id
     def addToDataBase(self):
         cur.execute("INSERT INTO STUDENT VALUES("+str(self.id)+",'"+self.first+"','"+self.last+"','"+self.major+"',"
                     +"'"+self.email+"',"+str(self.exp_grad_year)+");")
-        cur.execute("INSERT INTO LOGIN VALUES('"+self.email+"','"+self.password+"',"+self.id+");")
+        cur.execute("INSERT INTO LOGIN VALUES('"+self.email+"','"+self.password+"',"+str(self.id)+");")
 
     def searchCourse(self,course):
         print("Searching " + course)
@@ -130,9 +175,9 @@ class Student(User):
         course = cur.fetchone()
         if course == None:
             print("Invalid CRN") 
-        else:
-            try: #attempt to add course 
-                cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[8], self.getID()))
+        else: 
+            try:
+                cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[1], self.getID()))
                 con.commit()
             except: #if course already exists it tells the user 
                 print('Course already in schedule')
@@ -151,28 +196,176 @@ class Student(User):
                 con.commit()
             except:
                 print('Course not in schedule')
+    def log_in(self):
+        mainEmailInput.insert(0,self.email)
+        mainPasswordInput.insert(0,self.password)
+        Loginbtn.invoke()
+        
 
 class Instructor(User):
-    def __init__(self, f_name, l_name, ID):
+    def __init__(self, ID,f_name, l_name,title,email,department,yearOfHire ):
         User.__init__(self,f_name, l_name, ID)
+        self.title = title
+        self.email = email
+        self.department = department
+        self.yearOfHire = yearOfHire
+
+    def getID(self):
+        return self.id
 
     def searchCourse(self,course):
         print("Searching " + course)
-    def printSchedule(self):
-        print("Printing Schedule")
+    def printSchedule(self, cur):
+        schedule_window = Toplevel()
+        schedule_window.title("Instructor Schedule")
+        # Retrieve the schedule for the instructor from the database
+        #cur.execute("SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';" % self.getID())
+        #cur.execute(f"SELECT LOGIN.ID\nFROM LOGIN\nWHERE LOGIN.EMAIL = '{userN}'")
+
+        cur.execute("SELECT * FROM COURSE WHERE INSTRUCTORID = '%s'" % self.getID())
+
+        schedule = cur.fetchall()
+
+        
+        if schedule:
+            for course in schedule:
+                course_info = f"Course Name: {course[1]}\n"\
+                              f"Department: {course[2]}\n" \
+                              f"Time: {course[3]}\n" \
+                              f"Days of the Week: {course[4]}\n\n"
+                tk.Label(schedule_window, text=course_info).pack()
+                              
+        else:
+            tk.Label(schedule_window, text="No courses in schedule.").pack()
+
+
+
     def printClassList(self):
         print("Printing Class list")
+    def instructorPrintSchedule(self, cur):
+        #prints instructors schedule created by joey
+        cur.execute("""SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';""" % self.getID())
+        allClasses = cur.fetchall()
+        if(allClasses == None):
+            print("No classes found.")
+        else:
+            for course in allClasses:
+                printCourse(course)
+
+    def searchRosters(self, cur):
+      #prints roster for instructor created by joey
+      while(1):
+          if input("Press 1 to Search courses. Pess 2 to exit ") == '2' : 
+            return
+          crn = input('Please enter a course CRN: ')
+          try:
+              cur.execute("SELECT STUDENTID FROM SEMESTERSCHEDULE WHERE CRN='%s';" %crn)
+              students = cur.fetchall()
+              for person in students:
+                  cur.execute("SELECT SURNAME, NAME FROM STUDENT WHERE ID='%s';" %person)
+                  student = cur.fetchall()
+                  for i in student:
+                      print(i)
+          except:
+              print("Invalid Input")
+
+def searchAll(cursor):
+    #print all courses created by joey
+    cursor.execute("SELECT * FROM course;")
+    courses = cursor.fetchall()
+    for course in courses:
+        printCourse(course) 
 
 window = Tk()
+
+def printCourse(course):
+    print('Course Name: ' + str(course[1]))
+    print('CRN: ' + str(course[0]))
+    print('Department: ' + str(course[2]))
+    print('Time: ' + str(course[3]))
+    print('Days of the Week: ' + str(course[4]))
+    print('Semester: ' + str(course[5]))
+    print('Year: ' + str(course[6]))
+    print('Credits: ' + str(course[7]))
+    print(' ')
+
+def searchParam(cursor):
+    #allows search by parameter craeted by joey
+    print('Params: 1-CRN, 2-TITLE, 3-DEPARTMENT, 4-TIME, 5-DAYS, 6-SEMESTER, 7-YEAR, 8-CREDITS, 9-INSTRUCTORID')      #There is no case statement for 'Time'
+    param = input("Enter a parameter: ")
+    match param:
+        case '1':
+            crn = input("Enter a CRN: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CRN='%s';" %crn)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '2':
+            time = input("Enter the start time of the course in the format 10:00:00 : ")
+            cursor.execute("SELECT * FROM COURSE WHERE TIME='%s';" %time)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '3':
+            title = input("Enter a title: ")
+            cursor.execute("SELECT * FROM COURSE WHERE TITLE='%s';" %title)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '4':
+            department = input("Enter a department: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DEPARTMENT='%s';" %department)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '5':
+            daysOfWeek = input("Enter a days of week: ")
+            cursor.execute("SELECT * FROM COURSE WHERE DAYSOFWEEK='%s';" %daysOfWeek)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '6':
+            semester = input("Enter a semester: ")
+            cursor.execute("SELECT * FROM COURSE WHERE SEMESTER='%s';" %semester)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '7':
+            year = input("Enter a year: ")
+            cursor.execute("SELECT * FROM COURSE WHERE YEAR='%s';" %year)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '8':
+            credits = input("Enter a credits: ")
+            cursor.execute("SELECT * FROM COURSE WHERE CREDITS='%s';" %credits)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case '9':
+            instructorID = input("Enter an instructor ID: ")
+            cursor.execute("SELECT * FROM COURSE WHERE INSTRUCTORID='%s';" %instructorID)
+            courses = cursor.fetchall()
+            for course in courses:
+                printCourse(course)
+        case _:
+            print(f'"{param}"Not a valid param')
+
+
+
 
 #mainWindow = Toplevel()
 #mainWindow.withdraw() #Hides window
 
 mainEmailInput= tk.Entry(window)#username/email input1
+
 mainPasswordInput = tk.Entry(window) #password
 
 
+
+
 def create(fName,lName,major,password):
+    #Written by Kaleb 
     email = lName + fName[0]
     email = email.lower()
 
@@ -195,6 +388,7 @@ def create(fName,lName,major,password):
 
 
 def createNew():
+    #Written by Kaleb 
     mainWindow = Toplevel(window)
     mainWindow.geometry("500x500")
     tk.Label(mainWindow, text="Create New User").grid(row=0)
@@ -213,14 +407,15 @@ def createNew():
     inPassword.grid(row=3,column=1)
     inMajor.grid(row=4, column=1)
 
-    b3 = tk.Button(mainWindow, text=' Create ',
-                   command= lambda:[create(inFirstName.get(),inLastName.get(),inMajor.get(),inPassword.get()),mainWindow.destroy()])
+    b3 = tk.Button(mainWindow, text=' Create ',command= lambda:[create(inFirstName.get(),inLastName.get(),inMajor.get(),inPassword.get()),mainWindow.destroy()])
     b3.grid(row=5,column=1)
 
 
 def getLoginInfo():
-    mainWindow = Toplevel()
-    mainWindow.geometry("800x800")
+    #Written by Kaleb
+    mainWindow = Toplevel(window)
+    mainWindow.geometry("400x400")
+
 
     #loop through the data tables to check if they exist
 
@@ -235,27 +430,107 @@ def getLoginInfo():
     if(loginID != userID):
         print("Log in Failed")
     else:
+        global loginStatus
+        loginStatus = True
         userID = str(userID[0][0]) #gets first number of ID as string 
         status = userID[0] # this will give 1,2,3 based on status of user 
+        
 
         if(status == '1'):
             mainWindow.title("Student")
+            cur.execute(f"SELECT *\nFROM STUDENT\nWHERE ID={userID} ")
+            student = cur.fetchall()
+            s = Student(student[0][0],student[0][1],student[0][2],student[0][3],student[0][4],student[0][5],mainPasswordInput.get())
+            course_entry_search = tk.Entry(mainWindow)
+            course_entry_search.grid(row=0,column=1)
+            
+            b1 = tk.Button(mainWindow, text=' Search Course ',command= lambda:[s.searchCourse(course_entry_search.get())]).grid(row=0,column=0)
 
-        if(userN == "1"):
-            mainWindow.title("Student")
-        if(userN == "2"):
+            b2 = tk.Button(mainWindow, text=' Print Schedule ',command= lambda:[s.printSchedule()]).grid(row=1,column=0)
+
+            course_entry = tk.Entry(mainWindow)
+            course_entry.grid(row=2,column=1)
+            b3 = tk.Button(mainWindow, text=' Add Course ',command= lambda:[s.addCourseToSemesterSchedule(course_entry.get())]).grid(row=2,column=0)
+
+            drop_course_entry = tk.Entry(mainWindow)
+            drop_course_entry.grid(row=3,column=1)
+            b4 = tk.Button(mainWindow, text=' Drop Course ',command= lambda:[s.dropCourseFromSemesterSchedule(drop_course_entry.get())]).grid(row=3,column=0)
+
+
+        if(status == "3"):
             mainWindow.title("Admin")
-        if(userN == "3"):
-            mainWindow.title("Teacher")
+            cur.execute(f"SELECT *\nFROM ADMIN\nWHERE ID={userID} ")
+            admin = cur.fetchall()
+            a = Admin(admin[0][0],admin[0][1],admin[0][2],admin[0][3],admin[0][4],admin[0][5])
+
+            createCourseEntry = tk.Entry(mainWindow)
+            createCourseEntry.grid(row=0,column=1)
+            b1 = tk.Button(mainWindow, text=' Create Course ',command= lambda:[a.createCourse(createCourseEntry.get())]).grid(row=0,column=0)
+
+            removeCourseEntry = tk.Entry(mainWindow)
+            removeCourseEntry.grid(row=1,column=1)
+            b2 = tk.Button(mainWindow, text=' Remove Course ',command= lambda:[a.removeCourse(removeCourseEntry.get())]).grid(row=1,column=0)
+
+            addUserEntry = tk.Entry(mainWindow)
+            addUserEntry.grid(row=2,column=1)
+            b3 = tk.Button(mainWindow, text=' Add User ',command= lambda:[a.addUser(addUserEntry.get())]).grid(row=2,column=0)
+
+            removeUserEntry = tk.Entry(mainWindow)
+            removeUserEntry.grid(row=3,column=1)
+            b4 = tk.Button(mainWindow, text=' Remove User ',command= lambda:[a.removeUser(removeUserEntry.get())]).grid(row=3,column=0)
+
+            addStudentEntry = tk.Entry(mainWindow)
+            addStudentEntry.grid(row=4,column=1)
+            b5 = tk.Button(mainWindow, text=' Add Student ',command= lambda:[a.addStudent(addStudentEntry.get())]).grid(row=4,column=0)
+
+            removeStudentEntry = tk.Entry(mainWindow)
+            removeStudentEntry.grid(row=5,column=1)
+            b6 = tk.Button(mainWindow, text=' Remove Student ',command= lambda:[a.removeStudent(removeStudentEntry.get())]).grid(row=5,column=0)
+
+            createRosterEntry = tk.Entry(mainWindow)
+            createRosterEntry.grid(row=6,column=1)
+            b7 = tk.Button(mainWindow, text=' Create Roster ',command= lambda:[a.createRoster(createRosterEntry.get())]).grid(row=6,column=0)
+
+            searchRosterEntry = tk.Entry(mainWindow)
+            searchRosterEntry.grid(row=7,column=1)
+            b8 = tk.Button(mainWindow, text=' Search Roster ',command= lambda:[a.searchRoster(searchRosterEntry.get())]).grid(row=7,column=0)
+
+            printRosterEntry = tk.Entry(mainWindow)
+            printRosterEntry.grid(row=8,column=1)
+            b9 = tk.Button(mainWindow, text=' Print Roster ',command= lambda:[a.printRoster(printRosterEntry.get())]).grid(row=8,column=0)
+
+            printCourseEntry = tk.Entry(mainWindow)
+            printCourseEntry.grid(row=9,column=1)
+            b10 = tk.Button(mainWindow, text=' Print Course ',command= lambda:[a.printCourse(printCourseEntry.get())]).grid(row=9,column=0)
+
+        if(status == "2"):
+            mainWindow.title("Instructor")
+            cur.execute(f"SELECT *\nFROM INSTRUCTOR\nWHERE ID={userID} ")
+            instructor = cur.fetchall()
+            i = Instructor(instructor[0][0],instructor[0][1],instructor[0][2],instructor[0][3],instructor[0][4],instructor[0][5],instructor[0][6])
+            #searchCourse(course) printSchedule printClassList
+            course_entry_search = tk.Entry(mainWindow)
+            course_entry_search.grid(row=0,column=1)
+            
+            b1 = tk.Button(mainWindow, text=' Search Course ',command= lambda:[i.searchCourse(course_entry_search.get())]).grid(row=0,column=0)
+            b2 = tk.Button(mainWindow, text=' Print Schedule ', command=lambda: [i.printSchedule(cur)]).grid(row=1, column=0)
+            b3 = tk.Button(mainWindow, text=' Print Class List ',command= lambda:[i.printClassList()]).grid(row=2,column=0)
+
+            
+
+
+            
+
+
         userN = ""
         mainWindow.deiconify() #Shows window
 
-        #mainWindow.mainloop()
-        #tk.Label(window, text=userN).grid(row=4)
     
+Loginbtn = Button(window,text="Log In",command = getLoginInfo)
 
 
-def main():
+def main(Testing):
+    #Written by Kaleb
     window.title("Lepord Web")
     window.geometry("500x500")
 
@@ -263,76 +538,26 @@ def main():
     tk.Label(window, text="Username").grid(row=1)
     tk.Label(window, text="Password").grid(row=2)
 
-    Loginbtn = Button(window,text="Log In",command = getLoginInfo)
+    #Loginbtn = Button(window,text="Log In",command = lambda:[getLoginInfo])
+    if(Testing):
+        Loginbtn.invoke()
+        window.after(2000,lambda:window.destroy())
     createNewUser = Button(window,text ="Create New",command = createNew)
-
-    
-
-    # username = input1.get()
-    # password = input2.get()
-    # if(username != "" ):
-    #     mainWindow = Tk()
-
     mainEmailInput.grid(row=1, column=1)
     mainPasswordInput.grid(row=2, column=1)
     Loginbtn.grid(row=3)
     createNewUser.grid(row=3,column=1)
     window.mainloop()
 
-    
-    # user = User("KP","J",1)
-    # user.setFirstName("Kale")
-    # user.setLastName("Pel")
-    # user.setID(2)
-    # user.printInfo()
 
-    # admin = Admin("Kaleb","P",1)
-    # admin.addCourse("programming")
-    # admin.removeCourse("programming")
-    # admin.searchCourse("programming")
-    # admin.printCourse("programming")
-    # admin.addUser("Q")
-    # admin.removeUser("Q")
-    # admin.addStudent("student1")
-    # admin.removeStudent("student1")
-    # admin.createRoster("Roster1")
-    # admin.searchRoster("Roster1")
-    # admin.printRoster("Roster1")
-
-    # student = Student("Matt","A",100)
-    # student.addCourse("APC")
-    # student.dropCourse("APC")
-    # student.searchCourse("APC")
-    # student.printSchedule()
-
-    # instructor = Instructor("Mike","C",200)
-    # instructor.printSchedule()
-    # instructor.searchCourse("DCD")
-    # instructor.printClassList()
-
-
-    cur.execute("SELECT TITLE\nFROM COURSE\nWHERE COURSE.TITLE ='Geology'")
-    geo = cur.fetchall()
-
-    cur.execute("SELECT DEPARTMENT\nFROM COURSE\nWHERE COURSE.SEMESTER ='Fall'")
-    dep = cur.fetchall()
-
-
-    cur.execute("SELECT * FROM COURSE")
-    course = cur.fetchall()
-
-
-    cur.execute("SELECT COURSE.TITLE,INSTRUCTOR.LAST_NAME\nFROM COURSE,INSTRUCTOR\nWHERE COURSE.DEPARTMENT = INSTRUCTOR.DEPARTMENT")
-    teacherList = cur.fetchall()
-
-    print(teacherList)
-    #print(geo)
-    #print(dep)
-    #print(course)
-    con.commit()
-    con.close()
+   
+    # con.commit()
+    # con.close()
 
 
 if __name__ == "__main__":
     
-    main()
+    main(Testing)
+    #unittest.main()
+    con.commit()
+    con.close()
