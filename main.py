@@ -160,12 +160,13 @@ class Student(User):
                     +"'"+self.email+"',"+str(self.exp_grad_year)+");")
         cur.execute("INSERT INTO LOGIN VALUES('"+self.email+"','"+self.password+"',"+str(self.id)+");")
 
-    def searchCourse(self,course_CRN):
+    def searchCourse(self,course_CRN,mainW):
         cur.execute("SELECT * FROM COURSE WHERE CRN='%s';" %course_CRN)
         courses = cur.fetchall()
-        tb = tk.Text()
-        for course in courses:
-            printCoursetoGUI(course)
+        text_box = tk.Text(mainW, width = 35, height = 15)
+        text_box.grid(row = 6, column = 0, columnspan = 2)
+        printCoursetoGUI(courses,text_box)
+        
 
     def printSchedule(self):
         print("Printing Schedule")
@@ -271,14 +272,15 @@ def printCourse(course):
     print(' ')
 
 def printCoursetoGUI(course,text_box):
-    text_box.Insert('Course Name: ' + str(course[1]))
-    text_box.Insert('CRN: ' + str(course[0]))
-    text_box.Insert('Department: ' + str(course[2]))
-    text_box.Insert('Time: ' + str(course[3]))
-    text_box.Insert('Days of the Week: ' + str(course[4]))
-    text_box.Insert('Semester: ' + str(course[5]))
-    text_box.Insert('Year: ' + str(course[6]))
-    text_box.Insert('Credits: ' + str(course[7]))
+    text_box.grid(row = 6, column = 0, columnspan = 2)
+    text_box.insert(INSERT,'Course Name: ' + str(course[0][1])+"\n")
+    text_box.insert(INSERT,'CRN: ' + str(course[0][0])+"\n")
+    text_box.insert(INSERT,'Department: ' + str(course[0][2])+"\n")
+    text_box.insert(INSERT,'Time: ' + str(course[0][3])+"\n")
+    text_box.insert(INSERT,'Days of the Week: ' + str(course[0][4])+"\n")
+    text_box.insert(INSERT,'Semester: ' + str(course[0][5])+"\n")
+    text_box.insert(INSERT,'Year: ' + str(course[0][6])+"\n")
+    text_box.insert(INSERT,'Credits: ' + str(course[0][7])+"\n")
 
 def searchParam(cursor):
     #allows search by parameter craeted by joey
@@ -435,7 +437,7 @@ def getLoginInfo():
             course_entry_search = tk.Entry(mainWindow)
             course_entry_search.grid(row=0,column=1)
             
-            b1 = tk.Button(mainWindow, text=' Search Course ',command= lambda:[s.searchCourse(course_entry_search.get())]).grid(row=0,column=0)
+            b1 = tk.Button(mainWindow, text=' Search Course ',command= lambda:[s.searchCourse(course_entry_search.get(),mainWindow)]).grid(row=0,column=0)
 
             b2 = tk.Button(mainWindow, text=' Print Schedule ',command= lambda:[s.printSchedule()]).grid(row=1,column=0)
 
