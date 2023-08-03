@@ -105,6 +105,17 @@ class Admin(User):
             instructorId = input('Instructor Id: ')
             cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crn, name, department, time, days, year, credits, sem,instructorId)) 
             con.commit()
+    def createCourseGUI(self):
+        createcourse_window = Toplevel()
+        createcourse_window.title('Create Course')
+        
+
+        crn = tk.Entry()
+
+
+
+
+
     def removeCourse(self, cur):
         #remove course created by joey
         while(1):
@@ -142,6 +153,9 @@ class Admin(User):
     def printCourse(self,course):
         print("Printing course" + course)
 
+    def printall(self):
+        print ("Printing all courses avaliable. ")
+
 class Student(User):
     def __init__(self, ID, f_name, l_name, major, email, exp_grad,password):
         User.__init__(self,f_name, l_name, ID)
@@ -165,6 +179,8 @@ class Student(User):
 
     def printSchedule(self):
         print("Printing Schedule")
+        schedule_window = Toplevel()
+        schedule_window.title("Student Schedule")
         
     def addCourseToSemesterSchedule(self, cur):
         #add course to semester schedule created by Joey
@@ -241,9 +257,44 @@ class Instructor(User):
 
 
     def printClassList(self):
+        classlist_window = Toplevel()
+        classlist_window.title("Class List")
         print("Printing Class list")
+        cur.execute("SELECT TITLE FROM COURSE WHERE INSTRUCTORID = '%s';" %self.getID())
+        coursetitle = cur.fetchall()
+
+        for i in range (len(coursetitle)):
+            cur.execute("SELECT ID FROM SEMESTERSCHEDULE WHERE Course = '%s';" %coursetitle[i] )
+            
+            classlist = cur.fetchall()
+            
+
+            studentlist_info = ""
+            tk.Label(classlist_window, text = (coursetitle[i][0])).pack()
+            print(coursetitle[i])
+            for j in range(len(classlist)):
+
+                    
+
+                cur.execute("SELECT FIRST_NAME, LAST_NAME FROM STUDENT WHERE ID ='%s';" %classlist[j])
+                studentlist = cur.fetchall()
+                studentlist_info = studentlist_info + studentlist[0][0] + " " + studentlist[0][1] + "\n"
+            
+            tk.Label(classlist_window, text = studentlist_info).pack()
+
+
+
+
+
+
+        # if classlist & coursetitle:
+        #     for semesterschedule in classlist:
+        #         classlist = f"CRN: {semesterschedule[0]}\n"\
+        #                     f"Course: {semesterschedule[1]}\n"\
+        #                     f"ID: {semesterschedule[2]}\n"
+        # tk.Label(classlist_window, text = classlist).pack()
     def instructorPrintSchedule(self, cur):
-        #prints instructors schedule created by joey
+        
         cur.execute("""SELECT * FROM COURSE WHERE INSTRUCTORID = '%s';""" % self.getID())
         allClasses = cur.fetchall()
         if(allClasses == None):
@@ -253,7 +304,7 @@ class Instructor(User):
                 printCourse(course)
 
     def searchRosters(self, cur):
-      #prints roster for instructor created by joey
+    
       while(1):
           if input("Press 1 to Search courses. Pess 2 to exit ") == '2' : 
             return
@@ -270,7 +321,6 @@ class Instructor(User):
               print("Invalid Input")
 
 def searchAll(cursor):
-    #print all courses created by joey
     cursor.execute("SELECT * FROM course;")
     courses = cursor.fetchall()
     for course in courses:
@@ -290,7 +340,7 @@ def printCourse(course):
     print(' ')
 
 def searchParam(cursor):
-    #allows search by parameter craeted by joey
+   
     print('Params: 1-CRN, 2-TITLE, 3-DEPARTMENT, 4-TIME, 5-DAYS, 6-SEMESTER, 7-YEAR, 8-CREDITS, 9-INSTRUCTORID')      #There is no case statement for 'Time'
     param = input("Enter a parameter: ")
     match param:
@@ -413,8 +463,7 @@ def createNew():
 
 def getLoginInfo():
     #Written by Kaleb
-    mainWindow = Toplevel(window)
-    mainWindow.geometry("400x400")
+   
 
 
     #loop through the data tables to check if they exist
@@ -427,9 +476,16 @@ def getLoginInfo():
     userID = cur.fetchall()
 
     #CHECKS ID WITH EMAIL AND PASSWORD TO CHECK FOR MATCH
-    if(loginID != userID):
+   
+    if(loginID != userID or not loginID):
         print("Log in Failed")
+        loginfail = tk.Label(window, text = "Log in Failed :(", fg = '#f00',font = ("Ariel", 25), height = 10).place(x = 100, y = 100)
     else:
+        
+
+        mainWindow = Toplevel(window)
+        mainWindow.geometry("400x400")
+    
         global loginStatus
         loginStatus = True
         userID = str(userID[0][0]) #gets first number of ID as string 
@@ -465,7 +521,7 @@ def getLoginInfo():
 
             createCourseEntry = tk.Entry(mainWindow)
             createCourseEntry.grid(row=0,column=1)
-            b1 = tk.Button(mainWindow, text=' Create Course ',command= lambda:[a.createCourse(createCourseEntry.get())]).grid(row=0,column=0)
+            b1 = tk.Button(mainWindow, text=' Create Course ',command= lambda:[a.createCourseGUI()]).grid(row=0,column=0)
 
             removeCourseEntry = tk.Entry(mainWindow)
             removeCourseEntry.grid(row=1,column=1)
