@@ -5,11 +5,6 @@ import unittest
 from unittest import mock
 from unittest.mock import patch
 
-import unittest 
-from unittest import mock
-from unittest.mock import patch
-
-
 import sqlite3 
 con = sqlite3.connect("assignment3FINAL.db")
 cur = con.cursor()
@@ -18,55 +13,6 @@ today = datetime.date.today()
 year = today.year #gets current year for grad year
 
 
-     
-loginStatus = False    
-Testing = False
-
-#Written by Kaleb
-class TestCases(unittest.TestCase):
-    
-    def test_log_in(self):
-        Testing = True # if true automatically press the log in button 
-        mainEmailInput.insert(0,"newtoni") #valid username
-        mainPasswordInput.insert(0,"a")# valid password
-        main(Testing)
-        self.assertEqual(loginStatus,True,"Log In Failed")
-
-    def test_searchAllCoursesParam(self):
-        with mock.patch('builtins.input',side_effect=['1',11051]):
-            searchParam(cur)
-
-    def test_searchall(self):
-        searchAll(cur)
-    
-    def test_addCourse(self):
-        with mock.patch('builtins.input',side_effect=['1',"12010","Object Oriented Programming","BSCE","3:00","2","2023","4","Spring","2002","2"]):
-            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
-            print('-------Course created-----\n')
-            a.createCourse(cur)
-    def test_removeCourse(self):
-        with mock.patch('builtins.input',side_effect=['1',"12010","DELETE","2"]):
-            print('-------Course Removed-----\n')
-            a = Admin(3001,"Margaret","Hamilton","President","hamiltonm","Dobbs 1600")
-            a.removeCourse(cur)
-    def test_addCourseSemSchedule(self):
-        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
-            print('-------Course Added to schedule-----\n')
-            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
-            s.addCourseToSemesterSchedule(cur)
-    def test_removeCourseSemSchedule(self):
-        with mock.patch('builtins.input',side_effect=['1',"11051","2"]):
-            print('-------Course Dropped-----\n')
-            s = Student("1001","Issac","Newton","BSAS","newtoni","1668","a")
-            s.dropCourseFromSemesterSchedule(cur)
-    def test_printCourseRoster(self):
-       print("----SCHEDULE-------\n")
-       i = Instructor("2002","Nelson","Patrick","Full Prof.","parickn","HUSS","1994")
-       i.instructorPrintSchedule(cur)
-
-    
-
-     
 loginStatus = False    
 Testing = False
 
@@ -207,24 +153,10 @@ class Admin(User):
         e9 = tk.Label(createcourse_window, text=' Instructor ID: ').grid(row=8,column=0)
         #IID = IIDEntry.get()
 
-       # b = tk.Button(createcourse_window, text = 'Create Course', command = cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crnEntry.get(), nameEntry.get(), departmentEntry.get(), timeEntry.get(), daysEntry.get(), yearEntry.get(), creditsEntry.get(), semEntry.get(),IIDEntry.get()))).grid(row = 9, column = 0)
+        b = tk.Button(createcourse_window, text = 'Creat Course', command = lambda:cur.execute("INSERT INTO COURSE VALUES(%s,'%s','%s','%s','%s',%s,%s,'%s','%s');" % (crnEntry.get(), nameEntry.get(), departmentEntry.get(), timeEntry.get(), daysEntry.get(), yearEntry.get(), creditsEntry.get(), semEntry.get(),IIDEntry.get())))
 
-
-
-
-
-
-
-
-
-
-       
-
-
-
-
-
-            
+        b.grid(row = 9, column = 0)
+     
     def removeCourse(self, cur):
         #remove course created by joey
         while(1):
@@ -612,8 +544,6 @@ def createNew():
 
 def getLoginInfo():
     #Written by Kaleb
-    mainWindow = Toplevel(window)
-    mainWindow.geometry("400x400")
 
 
     #loop through the data tables to check if they exist
@@ -638,7 +568,6 @@ def getLoginInfo():
         mainWindow = Toplevel(window)
         mainWindow.geometry("400x400")
     
-        global loginStatus
         loginStatus = True
         userID = str(userID[0][0]) #gets first number of ID as string 
         status = userID[0] # this will give 1,2,3 based on status of user 
@@ -771,10 +700,6 @@ def main(Testing):
 
 if __name__ == "__main__":
     
-    main(Testing)
-    #unittest.main()
-    con.commit()
-    con.close()
     main(Testing)
     #unittest.main()
     con.commit()
