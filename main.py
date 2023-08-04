@@ -164,43 +164,66 @@ class Student(User):
         cur.execute("SELECT * FROM COURSE WHERE CRN='%s';" %course_CRN)
         courses = cur.fetchall()
         text_box = tk.Text(mainW, width = 35, height = 15)
-        text_box.grid(row = 6, column = 0, columnspan = 2)
+        text_box.place(x=0,y=110)
         printCoursetoGUI(courses,text_box)
         
 
-    def printSchedule(self):
-        print("Printing Schedule")
+    def printSchedule(self,mainW):
+        schcedule_win = Toplevel(mainW)
+        schcedule_win.title("Student Schedule")
+        cur.execute("SELECT * FROM SEMESTERSCHEDULE WHERE ID='%s';" %self.getID())
+        schedule = cur.fetchall()
+        #text_box = tk.Text(mainW, width = 35, height = 15)
+        #text_box.grid(row = 6, column = 0, columnspan = 2)
+        #text_box.insert(INSERT,'Schedule Name: ' + str(schcedule[0][1])+"\n")
+        if schedule:
+            for course in schedule:
+                course_info = f"Course Name: {course[1]}\n"\
+                              f"CRN: {course[0]}\n" 
+                tk.Label(schcedule_win, text=course_info).pack()
+
+        else:
+            tk.Label(schcedule_win, text="No courses in schedule.").pack()
+
         
-    def addCourseToSemesterSchedule(self, cur):
-        #add course to semester schedule created by Joey
-        if input("Press 1 to add a course to Schedule, Press 2 to exit") == '2' : 
-            return #currently asks for input but we can change to buttons with tkinter menu
-        crn = input('Course CRN: ')
+
+        
+    def addCourseToSemesterSchedule(self,crn,mainW):
+        #add course to semester schedule created by Joey edited for gui by Kaleb
         cur.execute("SELECT * FROM COURSE WHERE CRN = '%s';" % (crn))
         course = cur.fetchone()
+        text_box = tk.Text(mainW, width = 35, height = 15)
+        text_box.place(x=0,y=110)
         if course == None:
-            print("Invalid CRN") 
+            text_box.insert(INSERT,"Invalid CRN")
         else: 
-            try:
+            cur.execute("SELECT CRN FROM SEMESTERSCHEDULE WHERE ID in (%s) AND CRN in (%s);" % (self.getID(),crn))
+            exists = cur.fetchall()
+            if len(exists) > 0: # Get the CRN from their schedule if its not there its 0
+                text_box.insert(INSERT,'Course already in schedule!')
+            else:
                 cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[1], self.getID()))
                 con.commit()
-            except: #if course already exists it tells the user 
-                print('Course already in schedule')
-    def dropCourseFromSemesterSchedule(self, cur):
+                text_box.insert(INSERT,'Course added to schedule!')
+           
+
+    def dropCourseFromSemesterSchedule(self, crn,mainW):
         #remove course from schedule created by joey
-        if input("Press 1 to drop a course, Press 2 to exit") == '2' : 
-            return
-        crn = input('Course CRN: ')
-        cur.execute("SELECT * FROM COURSE WHERE CRN = '%s';" % (crn))
+        #if input("Press 1 to drop a course, Press 2 to exit") == '2' : 
+            #return
+        #crn = input('Course CRN: ')
+        cur.execute("SELECT * FROM SEMESTERSCHEDULE WHERE ID = '%s';" % (self.getID()))
         course = cur.fetchone()
+        text_box = tk.Text(mainW, width = 35, height = 15)
+        text_box.place(x=0,y=110)
         if course == None:
-            print("Invalid CRN") 
+            text_box.insert(INSERT,'Invalid CRN') 
         else:
-            try:
-                cur.execute("""DELETE FROM SEMESTERSCHEDULE WHERE CRN='%s';""" % (crn))
-                con.commit()
-            except:
-                print('Course not in schedule')
+            cur.execute("""DELETE FROM SEMESTERSCHEDULE WHERE CRN='%s';""" % (crn))
+            con.commit()
+            text_box.insert(INSERT,'Course removed from schedule')
+
+
     def log_in(self):
         mainEmailInput.insert(0,self.email)
         mainPasswordInput.insert(0,self.password)
@@ -272,7 +295,7 @@ def printCourse(course):
     print(' ')
 
 def printCoursetoGUI(course,text_box):
-    text_box.grid(row = 6, column = 0, columnspan = 2)
+    
     text_box.insert(INSERT,'Course Name: ' + str(course[0][1])+"\n")
     text_box.insert(INSERT,'CRN: ' + str(course[0][0])+"\n")
     text_box.insert(INSERT,'Department: ' + str(course[0][2])+"\n")
@@ -439,15 +462,15 @@ def getLoginInfo():
             
             b1 = tk.Button(mainWindow, text=' Search Course ',command= lambda:[s.searchCourse(course_entry_search.get(),mainWindow)]).grid(row=0,column=0)
 
-            b2 = tk.Button(mainWindow, text=' Print Schedule ',command= lambda:[s.printSchedule()]).grid(row=1,column=0)
+            b2 = tk.Button(mainWindow, text=' Print Schedule ',command= lambda:[s.printSchedule(mainWindow)]).grid(row=1,column=0)
 
             course_entry = tk.Entry(mainWindow)
             course_entry.grid(row=2,column=1)
-            b3 = tk.Button(mainWindow, text=' Add Course ',command= lambda:[s.addCourseToSemesterSchedule(course_entry.get())]).grid(row=2,column=0)
+            b3 = tk.Button(mainWindow, text=' Add Course ',command= lambda:[s.addCourseToSemesterSchedule(course_entry.get(),mainWindow)]).grid(row=2,column=0)
 
             drop_course_entry = tk.Entry(mainWindow)
             drop_course_entry.grid(row=3,column=1)
-            b4 = tk.Button(mainWindow, text=' Drop Course ',command= lambda:[s.dropCourseFromSemesterSchedule(drop_course_entry.get())]).grid(row=3,column=0)
+            b4 = tk.Button(mainWindow, text=' Drop Course ',command= lambda:[s.dropCourseFromSemesterSchedule(drop_course_entry.get(),mainWindow)]).grid(row=3,column=0)
 
 
         if(status == "3"):
