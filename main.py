@@ -90,8 +90,7 @@ class Admin(User):
         self.office = office
 
     def createCourse(self, cur):
-        #add course created by joey
-        while(1):
+        
             if input("Press 1 to add a course. Press 2 to exit") == '2' : 
                 return
             crn = input('course CRN: ')
@@ -108,9 +107,66 @@ class Admin(User):
     def createCourseGUI(self):
         createcourse_window = Toplevel()
         createcourse_window.title('Create Course')
-        
+        createcourse_window.geometry("400x400")
 
-        crn = tk.Entry()
+
+        crnEntry = tk.Entry(createcourse_window)
+        crnEntry.grid(row=0,column=1)
+        e1 = tk.Label(createcourse_window, text=' CRN: ').grid(row=0,column=0)
+        #crn = crnEntry.get()
+
+        nameEntry = tk.Entry(createcourse_window)
+        nameEntry.grid(row=1,column=1)
+        e2 = tk.Label(createcourse_window, text='Course Title: ').grid(row=1,column=0)
+        #name = nameEntry.get()
+
+        departmentEntry = tk.Entry(createcourse_window)
+        departmentEntry.grid(row=2,column=1)
+        e3 = tk.Label(createcourse_window, text=' Department: ').grid(row=2,column=0)
+        #department = departmentEntry.get()
+
+        timeEntry = tk.Entry(createcourse_window)
+        timeEntry.grid(row=3,column=1)
+        e4 = tk.Label(createcourse_window, text=' Time: ').grid(row=3,column=0)
+        #time = timeEntry.get()
+
+        daysEntry = tk.Entry(createcourse_window)
+        daysEntry.grid(row=4,column=1)
+        e5 = tk.Label(createcourse_window, text=' Days: ').grid(row=4,column=0)
+        #days = daysEntry.get()
+
+        yearEntry = tk.Entry(createcourse_window)
+        yearEntry.grid(row=5,column=1)
+        e6 = tk.Label(createcourse_window, text=' Year: ').grid(row=5,column=0)
+        #year = yearEntry.get()
+
+        creditsEntry = tk.Entry(createcourse_window)
+        creditsEntry.grid(row=6,column=1)
+        e7 = tk.Label(createcourse_window, text=' Credits: ').grid(row=6,column=0)
+        #credits = creditsEntry.get()
+
+        semEntry = tk.Entry(createcourse_window)
+        semEntry.grid(row=7,column=1)
+        e8 = tk.Label(createcourse_window, text=' Semester: ').grid(row=7,column=0)
+        #sem = semEntry.get()
+
+        IIDEntry = tk.Entry(createcourse_window)
+        IIDEntry.grid(row=8,column=1)
+        e9 = tk.Label(createcourse_window, text=' Instructor ID: ').grid(row=8,column=0)
+        #IID = IIDEntry.get()
+
+       # b = tk.Button(createcourse_window, text = 'Create Course', command = cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crnEntry.get(), nameEntry.get(), departmentEntry.get(), timeEntry.get(), daysEntry.get(), yearEntry.get(), creditsEntry.get(), semEntry.get(),IIDEntry.get()))).grid(row = 9, column = 0)
+
+
+
+
+
+
+
+
+
+
+       
 
 
 
@@ -183,7 +239,7 @@ class Student(User):
         schedule_window.title("Student Schedule")
         
     def addCourseToSemesterSchedule(self, cur):
-        #add course to semester schedule created by Joey
+        
         if input("Press 1 to add a course to Schedule, Press 2 to exit") == '2' : 
             return #currently asks for input but we can change to buttons with tkinter menu
         crn = input('Course CRN: ')
@@ -198,7 +254,7 @@ class Student(User):
             except: #if course already exists it tells the user 
                 print('Course already in schedule')
     def dropCourseFromSemesterSchedule(self, cur):
-        #remove course from schedule created by joey
+        
         if input("Press 1 to drop a course, Press 2 to exit") == '2' : 
             return
         crn = input('Course CRN: ')
