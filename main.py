@@ -87,22 +87,9 @@ class Admin(User):
         self.email = email
         self.office = office
 
-    def createCourse(self, cur):
-        
-            if input("Press 1 to add a course. Press 2 to exit") == '2' : 
-                return
-            crn = input('course CRN: ')
-            name = input("Course title: ")
-            department = input("Department: ")
-            time = input("Class time: ") 
-            days = input('Class days: ')
-            year = input('Year: ')
-            credits = input('Credits: ')
-            sem = input('Semester: ')
-            instructorId = input('Instructor Id: ')
-            cur.execute("INSERT INTO COURSE VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s');" % (crn, name, department, time, days, year, credits, sem,instructorId)) 
-            con.commit()
+    
     def createCourseGUI(self):
+        #Written by matt
         createcourse_window = Toplevel()
         createcourse_window.title('Create Course')
         createcourse_window.geometry("400x400")
@@ -153,34 +140,95 @@ class Admin(User):
         e9 = tk.Label(createcourse_window, text=' Instructor ID: ').grid(row=8,column=0)
         #IID = IIDEntry.get()
 
-        b = tk.Button(createcourse_window, text = 'Creat Course', command = lambda:cur.execute("INSERT INTO COURSE VALUES(%s,'%s','%s','%s','%s',%s,%s,'%s','%s');" % (crnEntry.get(), nameEntry.get(), departmentEntry.get(), timeEntry.get(), daysEntry.get(), yearEntry.get(), creditsEntry.get(), semEntry.get(),IIDEntry.get())))
+        b = tk.Button(createcourse_window, text = 'Create Course', command = lambda:cur.execute("INSERT INTO COURSE VALUES(%s,'%s','%s','%s','%s',%s,%s,'%s','%s');" % (crnEntry.get(), nameEntry.get(), departmentEntry.get(), timeEntry.get(), daysEntry.get(), yearEntry.get(), creditsEntry.get(), semEntry.get(),IIDEntry.get()))).grid(row = 9, column = 0)
 
-        b.grid(row = 9, column = 0)
-     
+
     def removeCourse(self, crn):
-        cur.execute("DELETE FROM COURSE WHERE CRN=%s" % crn)
+
+        #written by matt
+        cur.execute("""DELETE FROM COURSE WHERE CRN = %s;"""% (crn))
         con.commit()
-        #remove course created by joey terminal base
-        # while(1):
-        #     if input("Press 1 to remove a course. Press 2 to exit") == '2' :
-        #          return
-        #     crn = input("Input the course CRN: ")
-        #     try:
-        #         cur.execute("""SELECT * FROM course WHERE CRN = '%s';""" %crn)
-        #         print("Course selected: %s" %cur.fetchall())
-        #         confirm = input("To delete type 'DELETE'")
-        #         match confirm:
-        #             case 'DELETE':
-        #                 cur.execute("""DELETE FROM COURSE WHERE CRN = '%s';""" %crn)
-        #                 con.commit()
-        #             case _:
-        #                 pass
-        #     except:
-        #         print("INVALID INPUT")
-    def addUser(self,user):
-        print(user+" added to system")
-    def removeUser(self,user):
-        print(user+" removed from system")
+   
+
+    def addInstructor(self):
+        #written by matt
+        addInstructor_window = Toplevel()
+        addInstructor_window.title('Add Instructor')
+        addInstructor_window.geometry("400x400")
+
+
+        IDEntry = tk.Entry(addInstructor_window)
+        IDEntry.grid(row=0,column=1)
+        ID = tk.Label(addInstructor_window, text=' Instructor ID: ').grid(row=0,column=0)
+
+        First_NameEntry = tk.Entry(addInstructor_window)
+        First_NameEntry.grid(row=1,column=1)
+        First_name = tk.Label(addInstructor_window, text=' Instructor First Name: ').grid(row=1,column=0)
+
+        Last_NameEntry = tk.Entry(addInstructor_window)
+        Last_NameEntry.grid(row=2,column=1)
+        Last_Name = tk.Label(addInstructor_window, text=' Instructor Last Name: ').grid(row=2,column=0)
+
+        TitleEntry = tk.Entry(addInstructor_window)
+        TitleEntry.grid(row=3,column=1)
+        Title = tk.Label(addInstructor_window, text=' Instructor Title: ').grid(row=3,column=0)
+
+        EmailEntry = tk.Entry(addInstructor_window)
+        EmailEntry.grid(row=4,column=1)
+        Email = tk.Label(addInstructor_window, text=' Instructor Email: ').grid(row=4,column=0)
+
+        DepEntry = tk.Entry(addInstructor_window)
+        DepEntry.grid(row=5,column=1)
+        Dep = tk.Label(addInstructor_window, text=' Instructor Department: ').grid(row=5,column=0)
+
+        YearEntry = tk.Entry(addInstructor_window)
+        YearEntry.grid(row=6,column=1)
+        Year = tk.Label(addInstructor_window, text=' Instructor Year of hire: ').grid(row=6,column=0)
+
+        but = tk.Button(addInstructor_window, text = 'Add Instructor', command = lambda:cur.execute("INSERT INTO INSTRUCTOR VALUES(%s,'%s','%s','%s','%s','%s',%s);" % (IDEntry.get(), First_NameEntry.get(), Last_NameEntry.get(), TitleEntry.get(), EmailEntry.get(), DepEntry.get(), YearEntry.get()))).grid(row = 9, column = 0)
+
+    def link_unlink(self):
+        #two entries course crn and instructor id
+        #two buttons link and unlink
+        link_unlink_window = Toplevel()
+        link_unlink_window.title('Link/Unlink ')
+        link_unlink_window.geometry("400x400")
+
+        crnsEntry = tk.Entry(link_unlink_window)
+        crnsEntry.grid(row=0,column=1)
+        crns = tk.Label(link_unlink_window, text=' CRN: ').grid(row=0,column=0)
+
+        IDEntry = tk.Entry(link_unlink_window)
+        IDEntry.grid(row=1,column=1)
+        ID = tk.Label(link_unlink_window, text=' Student/Instructor ID: ').grid(row=1,column=0)
+
+        b_one = tk.Button(link_unlink_window, text = ' Link: ', command = lambda: self.link(crnsEntry.get(),IDEntry.get())).grid(row = 4, column = 0)
+        b_two = tk.Button(link_unlink_window, text = ' Unlink: ', command = lambda: self.unlink(crnsEntry.get(),IDEntry.get())).grid(row =4 ,column = 1)
+
+    def link(self, crn, ID):
+        if (ID[0] == '1'):
+            cur.execute("SELECT * FROM COURSE WHERE CRN = '%s';" % (crn))
+            course = cur.fetchone()
+            cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[1], ID))
+            con.commit()
+        elif (ID[0] =='2'):
+            #change instructor Id to new id you want to link
+             cur.execute("UPDATE COURSE SET INSTRUCTORID = %s WHERE CRN = %s "%(ID,crn))
+             con.commit()
+
+    def unlink(self, crn, ID):
+        if (ID[0] == '1'):
+            cur.execute("DELETE FROM SEMESTERSCHEDULE WHERE CRN = '%s' AND ID = '%s';" % (crn, ID))
+            con.commit()
+            # course = cur.fetchone()
+            # cur.execute("""INSERT INTO SEMESTERSCHEDULE VALUES('%s', '%s', '%s');""" % (crn, course[1], ID))
+            # con.commit()
+        elif (ID[0] =='2'):
+            #change instructor Id to new id you want to link
+             cur.execute("UPDATE COURSE SET INSTRUCTORID = '%s' WHERE CRN = %s AND INSTRUCTORID = '%s' ;"%('',crn, ID))
+             con.commit()
+
+        
     def addStudent(self):
         #Add student created by Kaleb
 
@@ -215,10 +263,6 @@ class Admin(User):
 
         b = tk.Button(addStudentWin, text = 'Create Student', command = lambda:cur.execute("INSERT INTO STUDENT VALUES(%s,'%s','%s','%s','%s',%s);" % (idEntry.get(), fnameEntry.get(), lnameEntry.get(), majorEntry.get(), emailEntry.get(), yearEntry.get())))
         b.grid(row = 9, column = 0)
-
-
-
-
     def removeStudent(self, user):
         print(user+" removed from system")
     def createRoster(self, roster):
@@ -245,9 +289,6 @@ class Student(User):
         self.email = email
         self.exp_grad_year = exp_grad
         self.password = password
-    
-    def getID(self):
-        return self.id
     
     def getID(self):
         return self.id
@@ -528,7 +569,10 @@ def searchParam(cursor):
 
 mainEmailInput= tk.Entry(window)#username/email input1
 
+
 mainPasswordInput = tk.Entry(window) #password
+
+
 
 
 
@@ -595,6 +639,7 @@ def getLoginInfo():
 
     #CHECKS ID WITH EMAIL AND PASSWORD TO CHECK FOR MATCH
    
+   
     if(loginID != userID or not loginID):
         print("Log in Failed")
         loginfail = tk.Label(window, text = "Log in Failed :(", fg = '#f00',font = ("Ariel", 25), height = 10).place(x = 100, y = 100)
@@ -606,6 +651,13 @@ def getLoginInfo():
         mainWindow = Toplevel(window)
         mainWindow.geometry("400x400")
     
+        loginStatus = True
+        
+
+        mainWindow = Toplevel(window)
+        mainWindow.geometry("400x400")
+    
+        global loginStatus
         loginStatus = True
         userID = str(userID[0][0]) #gets first number of ID as string 
         status = userID[0] # this will give 1,2,3 based on status of user 
@@ -640,15 +692,26 @@ def getLoginInfo():
             admin = cur.fetchall()
             a = Admin(admin[0][0],admin[0][1],admin[0][2],admin[0][3],admin[0][4],admin[0][5])
 
+           
             b1 = tk.Button(mainWindow, text=' Create Course ',command= lambda:[a.createCourseGUI()]).grid(row=0,column=0)
 
             removeCourseEntry = tk.Entry(mainWindow)
             removeCourseEntry.grid(row=1,column=1)
             b2 = tk.Button(mainWindow, text=' Remove Course ',command= lambda:[a.removeCourse(removeCourseEntry.get())]).grid(row=1,column=0)
 
-            b5 = tk.Button(mainWindow, text=' Add Student ',command= lambda:[a.addStudent()]).grid(row=4,column=0)
+            b3 = tk.Button(mainWindow, text=' Add Instructor ',command= lambda:[a.addInstructor()]).grid(row=2,column=0)
 
-            b6 = tk.Button(mainWindow, text=' Remove Student ',command= lambda:[a.removeStudent()]).grid(row=5,column=0)
+            removeUserEntry = tk.Entry(mainWindow)
+            removeUserEntry.grid(row=3,column=1)
+            b4 = tk.Button(mainWindow, text=' Remove Instructor ',command= lambda:[a.removeUser(removeUserEntry.get())]).grid(row=3,column=0)
+
+            addStudentEntry = tk.Entry(mainWindow)
+            addStudentEntry.grid(row=4,column=1)
+            b5 = tk.Button(mainWindow, text=' Add Student ',command= lambda:[a.addStudent(addStudentEntry.get())]).grid(row=4,column=0)
+
+            removeStudentEntry = tk.Entry(mainWindow)
+            removeStudentEntry.grid(row=5,column=1)
+            b6 = tk.Button(mainWindow, text=' Remove Student ',command= lambda:[a.removeStudent(removeStudentEntry.get())]).grid(row=5,column=0)
 
             createRosterEntry = tk.Entry(mainWindow)
             createRosterEntry.grid(row=6,column=1)
@@ -665,6 +728,10 @@ def getLoginInfo():
             printCourseEntry = tk.Entry(mainWindow)
             printCourseEntry.grid(row=9,column=1)
             b10 = tk.Button(mainWindow, text=' Print Course ',command= lambda:[a.printCourse(printCourseEntry.get())]).grid(row=9,column=0)
+
+            
+            b11 = tk.Button(mainWindow, text=' Link/Unlink ',command= lambda:[a.link_unlink()]).grid(row=10,column=0)
+
 
         if(status == "2"):
             mainWindow.title("Instructor")
@@ -701,10 +768,6 @@ def main(Testing):
     tk.Label(window, text="Username").grid(row=1)
     tk.Label(window, text="Password").grid(row=2)
 
-    #Loginbtn = Button(window,text="Log In",command = lambda:[getLoginInfo])
-    if(Testing):
-        Loginbtn.invoke()
-        window.after(2000,lambda:window.destroy())
     #Loginbtn = Button(window,text="Log In",command = lambda:[getLoginInfo])
     if(Testing):
         Loginbtn.invoke()
