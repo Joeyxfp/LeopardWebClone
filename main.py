@@ -157,30 +157,68 @@ class Admin(User):
 
         b.grid(row = 9, column = 0)
      
-    def removeCourse(self, cur):
-        #remove course created by joey
-        while(1):
-            if input("Press 1 to remove a course. Press 2 to exit") == '2' :
-                 return
-            crn = input("Input the course CRN: ")
-            try:
-                cur.execute("""SELECT * FROM course WHERE CRN = '%s';""" %crn)
-                print("Course selected: %s" %cur.fetchall())
-                confirm = input("To delete type 'DELETE'")
-                match confirm:
-                    case 'DELETE':
-                        cur.execute("""DELETE FROM COURSE WHERE CRN = '%s';""" %crn)
-                        con.commit()
-                    case _:
-                        pass
-            except:
-                print("INVALID INPUT")
+    def removeCourse(self, crn):
+        cur.execute("DELETE FROM COURSE WHERE CRN=%s" % crn)
+        con.commit()
+        #remove course created by joey terminal base
+        # while(1):
+        #     if input("Press 1 to remove a course. Press 2 to exit") == '2' :
+        #          return
+        #     crn = input("Input the course CRN: ")
+        #     try:
+        #         cur.execute("""SELECT * FROM course WHERE CRN = '%s';""" %crn)
+        #         print("Course selected: %s" %cur.fetchall())
+        #         confirm = input("To delete type 'DELETE'")
+        #         match confirm:
+        #             case 'DELETE':
+        #                 cur.execute("""DELETE FROM COURSE WHERE CRN = '%s';""" %crn)
+        #                 con.commit()
+        #             case _:
+        #                 pass
+        #     except:
+        #         print("INVALID INPUT")
     def addUser(self,user):
         print(user+" added to system")
     def removeUser(self,user):
         print(user+" removed from system")
-    def addStudent(self, user):
-        print(user + " added to system")
+    def addStudent(self):
+        #Add student created by Kaleb
+
+        addStudentWin = Toplevel()
+        addStudentWin.title('Add Student')
+        addStudentWin.geometry("400x400")
+
+
+        idEntry = tk.Entry(addStudentWin)
+        idEntry.grid(row=0,column=1)
+        e1 = tk.Label(addStudentWin, text='ID:').grid(row=0,column=0)
+
+        fnameEntry = tk.Entry(addStudentWin)
+        fnameEntry.grid(row=1,column=1)
+        e2 = tk.Label(addStudentWin, text='First Name: ').grid(row=1,column=0)
+
+        lnameEntry = tk.Entry(addStudentWin)
+        lnameEntry.grid(row=2,column=1)
+        e3 = tk.Label(addStudentWin, text='Last Name: ').grid(row=2,column=0)
+
+        majorEntry = tk.Entry(addStudentWin)
+        majorEntry.grid(row=3,column=1)
+        e4 = tk.Label(addStudentWin, text='Major: ').grid(row=3,column=0)
+
+        emailEntry = tk.Entry(addStudentWin)
+        emailEntry.grid(row=4,column=1)
+        e5 = tk.Label(addStudentWin, text='Email:(Last Name First Initial) ').grid(row=4,column=0)
+
+        yearEntry = tk.Entry(addStudentWin)
+        yearEntry.grid(row=5,column=1)
+        e6 = tk.Label(addStudentWin, text='Expected Grad Year: ').grid(row=5,column=0)
+
+        b = tk.Button(addStudentWin, text = 'Create Student', command = lambda:cur.execute("INSERT INTO STUDENT VALUES(%s,'%s','%s','%s','%s',%s);" % (idEntry.get(), fnameEntry.get(), lnameEntry.get(), majorEntry.get(), emailEntry.get(), yearEntry.get())))
+        b.grid(row = 9, column = 0)
+
+
+
+
     def removeStudent(self, user):
         print(user+" removed from system")
     def createRoster(self, roster):
@@ -602,29 +640,15 @@ def getLoginInfo():
             admin = cur.fetchall()
             a = Admin(admin[0][0],admin[0][1],admin[0][2],admin[0][3],admin[0][4],admin[0][5])
 
-            createCourseEntry = tk.Entry(mainWindow)
-            createCourseEntry.grid(row=0,column=1)
             b1 = tk.Button(mainWindow, text=' Create Course ',command= lambda:[a.createCourseGUI()]).grid(row=0,column=0)
 
             removeCourseEntry = tk.Entry(mainWindow)
             removeCourseEntry.grid(row=1,column=1)
             b2 = tk.Button(mainWindow, text=' Remove Course ',command= lambda:[a.removeCourse(removeCourseEntry.get())]).grid(row=1,column=0)
 
-            addUserEntry = tk.Entry(mainWindow)
-            addUserEntry.grid(row=2,column=1)
-            b3 = tk.Button(mainWindow, text=' Add User ',command= lambda:[a.addUser(addUserEntry.get())]).grid(row=2,column=0)
+            b5 = tk.Button(mainWindow, text=' Add Student ',command= lambda:[a.addStudent()]).grid(row=4,column=0)
 
-            removeUserEntry = tk.Entry(mainWindow)
-            removeUserEntry.grid(row=3,column=1)
-            b4 = tk.Button(mainWindow, text=' Remove User ',command= lambda:[a.removeUser(removeUserEntry.get())]).grid(row=3,column=0)
-
-            addStudentEntry = tk.Entry(mainWindow)
-            addStudentEntry.grid(row=4,column=1)
-            b5 = tk.Button(mainWindow, text=' Add Student ',command= lambda:[a.addStudent(addStudentEntry.get())]).grid(row=4,column=0)
-
-            removeStudentEntry = tk.Entry(mainWindow)
-            removeStudentEntry.grid(row=5,column=1)
-            b6 = tk.Button(mainWindow, text=' Remove Student ',command= lambda:[a.removeStudent(removeStudentEntry.get())]).grid(row=5,column=0)
+            b6 = tk.Button(mainWindow, text=' Remove Student ',command= lambda:[a.removeStudent()]).grid(row=5,column=0)
 
             createRosterEntry = tk.Entry(mainWindow)
             createRosterEntry.grid(row=6,column=1)
